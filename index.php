@@ -2,9 +2,8 @@
 <?php
 
 /*
-    v30
-    [***]: Aggiungi supporto per i sottodomini, dato che viene lasciato se lo cerchi ed agisce come il sito normale
-    [***]: Miglioramento percorso relativo lato client (£::hash e altri problemi con <base> (inplementa un PATH come sul cmd))
+    v32
+    [***]: Return da assemble
 */
 
 session_start();
