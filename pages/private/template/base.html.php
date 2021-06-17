@@ -1,7 +1,7 @@
 
 <?php
-	$out = ob_function(function() use($page, $args) {
-		if (!assemble($page, $args))
+	$out = ob::func(function() use($page, $_ARGS) {
+		if (!assemble($page, $_ARGS))
 			assemble("../error", [ "code" => 404 ]);
 	})();
 

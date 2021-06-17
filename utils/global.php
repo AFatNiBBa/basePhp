@@ -293,25 +293,25 @@ class £
 }
 
 //| Carica il file passandogli certe variabili; Se un file è in mezzo al percorso viene comunque richiamato e può poi comportarsi come nodo-cartella avendo accesso a "$dirs" e "$i"
-function assemble($path, array $args = [], $ext = ".html.php")
+function assemble($path, array $_ARGS = [], $ext = ".html.php")
 {
     global $db;                                             # Variabili accessibili a tutte le pagine
     static $_MSG = [];                                      # Variabile utilizzabile per scambiare informazioni tra le pagine; La parola 'static' la crea la prima volta che serve ed usa la stessa instanza tutte le altre volte
 
-    $file = $path[0] == "/"                                 # Se il percorso inizia con "/" allora parte da dentro a "pages", altrimenti dalla cartella corrente
+    $_FILE = $path[0] == "/"                                # Se il percorso inizia con "/" allora parte da dentro a "pages", altrimenti dalla cartella corrente
     ? __DIR__ . "/../pages"
     : dirname(debug_backtrace()[0]["file"]) . "/";          # Cartella del file che chiava la funzione**-
 
     $dirs = preg_split("~[\\\\/]~", $path);
     for ($i = 0, $l = count($dirs); $i < $l; $i++)
     {
-        if (is_dir($current = $file . $dirs[$i]))
+        if (is_dir($current = $_FILE . $dirs[$i]))
         {
             //| Cartella
-            $file = $current . "/";
+            $_FILE = $current . "/";
             if ($i == $l - 1) $dirs[$l++] = "main";
         }
-        else if (!file_exists($file = $current . $ext))
+        else if (!file_exists($_FILE = $current . $ext))
             //| Non trovato
             return false;
         else
@@ -319,10 +319,9 @@ function assemble($path, array $args = [], $ext = ".html.php")
             //| File
             for ($_PATH = ""; ++$i < $l;)                   # Creazione variabile speciale "$_PATH" in cui verrà contenuto il percorso successivo
                 $_PATH .= ($_PATH ? "/" : "") . $dirs[$i];
-            unset($path, $ext, $dirs, $i, $l, $current);    # Eliminazione variabili definite in funzione
-            extract($args);                                 # Definizione parametri personalizzati
-            include $file;                                  # Esecuzione "$file"
-            return true;
+            unset($path, $ext, $dirs, $i, $l, $current);    # Eliminazione variabili definite in funzione (Tranne "$_PATH", "$_FILE", "$_ARGS", "$_MSG" e "$db")
+            extract($_ARGS);                                # Definizione parametri personalizzati
+            return [ include $_FILE ];                      # Esecuzione "$_FILE"
         }
     }
     return false;
