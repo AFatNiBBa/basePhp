@@ -1,7 +1,7 @@
 
 <?php
 	$out = ob::func(function() use($page, $_ARGS) {
-		if (!assemble($page, $_ARGS))
+		if (preg_match("~^/?private~", $page) || !@assemble($page, $_ARGS, true)[0])
 			assemble("../error", [ "code" => 404 ]);
 	})();
 
@@ -21,7 +21,7 @@
 		<meta charset="UTF-8">
 
 		<!-- Librerie Lato Client -->
-		<?php assemble("includes", [], ".html") ?>
+		<?php assemble("includes", [".html"]) ?>
 	</head>
 	<body>
 		<?php if ($_MSG["header"] ?? true) assemble("header") ?>

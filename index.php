@@ -2,7 +2,7 @@
 <?php
 
 /*
-    v36
+    v40
     Fatto.
 */
 
@@ -33,12 +33,8 @@ try
             : "my_$altervista"
     ]);
     
-    //| Reindirizzamento; Mette il template se non è in "plain/" o c'è ma non esiste; Da errore se prova ad accedere a "private/"
-    if (
-        ($temp = preg_match("/^private\/.+/", $page)) ||
-        !preg_match("/^plain\/.+/", $page) ||
-        !assemble("/$page", [], "")
-    ) assemble("/private/template/base", $temp ? [ "page" => "/private/error", "code" => 404 ] : [ "page" => "/$page" ]);
+    //| Reindirizzamento
+    assemble("/private/template/base", [ "page" => "/$page" ]);
 }
 catch (Exception $e)
 {

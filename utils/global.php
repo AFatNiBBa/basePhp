@@ -298,36 +298,50 @@ class £
     }
 }
 
-//| Carica il file passandogli certe variabili; Se un file è in mezzo al percorso viene comunque richiamato e può poi comportarsi come nodo-cartella avendo accesso a "$dirs" e "$i"
-function assemble($path, array $_ARGS = [], $ext = ".html.php")
+//| Carica il file passandogli certe variabili
+//| Se un file è in mezzo al percorso viene comunque richiamato e può poi comportarsi come nodo-cartella avendo accesso a "$_PATH", array contenente il resto del percorso
+//| Se il file non viene provato prova a cercare "_", se è una cartella continua a fare la stessa cosa finchè non trova un file
+//| Se un percorso è "a/b" e viene applicato alla seguente struttura file ({ a: { "_.ext": "file", _: { "b.ext": "file" }, "b.ext": "file" } }) la priorità dei file da scegliere sarà "a/b.ext", "a/_/b.ext" ed infine, se oltre che al file precedente viene anche la cancellata la cartella "a/_", viene scelto "a/_.ext", altrimenti da errore
+function assemble($path, $args = [], $priv = false)
 {
-    global $db;                                             # Variabili accessibili a tutte le pagine
-    static $_MSG = [];                                      # Variabile utilizzabile per scambiare informazioni tra le pagine; La parola 'static' la crea la prima volta che serve ed usa la stessa instanza tutte le altre volte
+    # [ $_MSG, $path, $args, $priv, $ext, $file ]
+    static $_MSG = [];
+    $ext = $args[0] ?? ".html.php";
+    if (!is_array($path)) $path = preg_split("~[\\\\/]~", $path);       # Può essere sia un array che un file
+    $file = $path[0] == "" ? __DIR__ . "/../pages" : dirname(debug_backtrace()[0]["file"]);
+    if (!$path[0]) array_shift($path);
 
-    $_FILE = $path[0] == "/"                                # Se il percorso inizia con "/" allora parte da dentro a "pages", altrimenti dalla cartella corrente
-    ? __DIR__ . "/../pages"
-    : dirname(debug_backtrace()[0]["file"]) . "/";          # Cartella del file che chiava la funzione**-
-
-    $dirs = preg_split("~[\\\\/]~", $path);
-    for ($i = 0, $l = count($dirs); $i < $l; $i++)
+    for ($i = 0, $l = count($path); true; $i++)
     {
-        if (is_dir($current = $_FILE . $dirs[$i]))
+        # [ $i, $l, $e ]
+        if(!($e = $path[$i]) || ($priv && $e[0] == "_" && strlen($e) > 1)) { $e = "_"; $i--; }
+        while(true)
         {
-            //| Cartella
-            $_FILE = $current . "/";
-            if ($i == $l - 1) $dirs[$l++] = "main";
-        }
-        else if (!file_exists($_FILE = $current . $ext))
-            //| Non trovato
-            return false;
-        else
-        {
-            //| File
-            for ($_PATH = ""; ++$i < $l;)                   # Creazione variabile speciale "$_PATH" in cui verrà contenuto il percorso successivo
-                $_PATH .= ($_PATH ? "/" : "") . $dirs[$i];
-            unset($path, $ext, $dirs, $i, $l, $current);    # Eliminazione variabili definite in funzione (Tranne "$_PATH", "$_FILE", "$_ARGS", "$_MSG" e "$db")
-            extract($_ARGS);                                # Definizione parametri personalizzati
-            return [ include $_FILE ];                      # Esecuzione "$_FILE"
+            # [ $temp, $d, $f ]
+            $temp = "$file/$e";
+            [ $d, $f ] = [ is_dir($temp), is_file($temp . $ext) ];
+            if ($d && !$f)
+            {
+                dir:
+                $file = $temp;
+                break;
+            }
+            else if (!$d && $f) 
+            {
+                file:
+                array_splice($path, 0, $i + 1);
+                return (function($_FILE, $_ARGS, $_PATH) use(&$_MSG) {
+                    global $db;
+                    extract($_ARGS);
+                    return [ include $_FILE ];
+                })($temp . $ext, $args, $path);
+            }
+            else if ($f && ($i == $l - 1))                              # Se c'è sia una cartella che un file da priorità al file se è l'ultimo elemento del percorso
+                goto file;
+            else if ($d)
+                goto dir;
+            else if ($e != "_") { $e = "_"; $i--; }
+            else break 2;
         }
     }
     return false;
