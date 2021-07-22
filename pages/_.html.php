@@ -1,2 +1,2 @@
 
-<?php if(count($_PATH)) return false ?>
+<?php if(@$_PATH[0]) return false ?>

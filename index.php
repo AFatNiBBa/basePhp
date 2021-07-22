@@ -2,8 +2,14 @@
 <?php
 
 /*
-    v40
-    Fatto.
+    v41
+
+    [Contesto]
+    1) Su "assemble()" se chiedi un percorso non esistente ti da il default e ti mette il resto del percorso su "$_PATH"
+    2) Se chiedi la root del sito ti da il default principale ed il resto del percorso (Una stringa vuota singola) è messo su "$_PATH"
+
+    [Risoluzione]
+    E' stato necessario modificare la root perchè dava errore se il "$_PATH" non era vuoto, cosa che non poteva accadere (*Punto 2)
 */
 
 session_start();
